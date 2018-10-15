@@ -9,6 +9,7 @@ module LXDriver
 
         TEMPLATE_PREFIX = '//TEMPLATE/'
         HOTPLUG_PREFIX = 'VMM_DRIVER_ACTION_DATA/'
+        USER_TEMPLATE = '//USER_TEMPLATE/'
 
         attr_reader :vm_id, :datastores, :sysds_id, :rootfs_id, :xml
 
@@ -23,6 +24,7 @@ module LXDriver
 
         # Returns the diskid corresponding to the root device
         def rootfs_id
+            # TODO: root partition from BOOT->Root device
             # TODO: Add support when path is /
             bootme = '0'
             boot_order = single_element('OS/BOOT')
@@ -82,6 +84,33 @@ module LXDriver
 
             # context
             hash.update(context) if single_element('CONTEXT')
+        end
+
+        def extra(hash)
+            [security, raw_data].each {|i| hash.update(i) }
+        end
+
+        ###############
+        #   LXD_raw   #
+        ###############
+
+        # TODO: Get data from USER_TEMPLATE(current) or TEMPLATE/FEATURES
+        def security
+            security = { 'security.privileged' => false, 'security.nesting' => false }
+            security.each_key do |key|
+                item = "LXD_SECURITY_#{key.split('.').last.swapcase}"
+                sec = single_element(item, USER_TEMPLATE)
+                security[key] = sec if sec
+            end
+            security
+        end
+
+        # TODO: test hash values like raw.lxc
+        def raw_data
+            data = single_element('RAW/DATA')
+            data.insert(0, '{')
+            data.insert(-1, '}')
+            JSON.parse(data)
         end
 
         ###############
@@ -194,8 +223,8 @@ module LXDriver
             @xml[path]
         end
 
-        def single_element(path)
-            xml_single_element(TEMPLATE_PREFIX + path)
+        def single_element(path, pre = TEMPLATE_PREFIX)
+            xml_single_element(pre + path)
         end
 
         # Returns an Array with PATH's instances in XML
@@ -205,8 +234,8 @@ module LXDriver
             elements
         end
 
-        def multiple_elements(path)
-            xml_multiple_elements(TEMPLATE_PREFIX + path)
+        def multiple_elements(path, pre = TEMPLATE_PREFIX)
+            xml_multiple_elements(pre + path)
         end
 
         def complex_element(path)
@@ -225,6 +254,7 @@ module LXDriver
 
             xml.memory(self['config'])
             xml.cpu(self['config'])
+            xml.extra(self['config'])
             xml.network(self['devices'])
             xml.storage(self['devices'])
         end
