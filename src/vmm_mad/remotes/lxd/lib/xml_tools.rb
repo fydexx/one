@@ -96,7 +96,7 @@ module LXDriver
 
         # TODO: Get data from USER_TEMPLATE(current) or TEMPLATE/FEATURES
         def security
-            security = { 'security.privileged' => false, 'security.nesting' => false }
+            security = { 'security.privileged' => 'false', 'security.nesting' => 'false' }
             security.each_key do |key|
                 item = "LXD_SECURITY_#{key.split('.').last.swapcase}"
                 sec = single_element(item, USER_TEMPLATE)
@@ -108,6 +108,8 @@ module LXDriver
         # TODO: test hash values like raw.lxc
         def raw_data
             data = single_element('RAW/DATA')
+            return {} unless data
+
             data.insert(0, '{')
             data.insert(-1, '}')
             JSON.parse(data)
