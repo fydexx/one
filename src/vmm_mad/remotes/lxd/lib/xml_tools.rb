@@ -153,7 +153,7 @@ module LXDriver
             info = complex_element('CONTEXT')
             disk_id = info['DISK_ID']
             source = LXDriver.device_path(self, disk_id, 'mapper/')
-            data = disk_basic(source, '/mnt')
+            data = disk_basic(source, '/tmp/context')
             { 'context' => data }
         end
 
