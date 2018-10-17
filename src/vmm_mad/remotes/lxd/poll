@@ -52,7 +52,7 @@ module LXD
         def get_all_vm_info
             vms = Container.get_all(CLIENT)
 
-            return nil unless vms
+            return unless vms
 
             vms_info = get_values(vms)
             vms_info
@@ -67,11 +67,11 @@ module LXD
                 name = container.name
                 values[:state] = get_state(container)
 
-                # unless name =~ /^one-\d+/ # Wild VMs
-                #     template = yaml_to_one(container)
-                #     values[:template] = Base64.encode64(template).delete("\n")
-                #     values[:vm_name] = name
-                # end
+                unless name =~ /^one-\d+/ # Wild VMs
+                    template = yaml_to_one(container)
+                    values[:template] = Base64.encode64(template).delete("\n")
+                    values[:vm_name] = name
+                end
 
                 vms_info[name] = values
                 next unless values[:state] == 'a'
@@ -200,24 +200,38 @@ module LXD
             jiffies
         end
 
-#         def yaml_to_one(container)
-#             name = container.name
-#             vcpu = container.config['limits.cpu.allowance'].split('%').to_i / 100
-#             memory = container.config['limits.memory'] # TODO: check unit
-#             arch = container.info['architecture']
+        def parse_memory(memory)
+            mem_suffix = memory[-2..-1]
+            memory = memory[0..-3].to_i # remove sufix
+            case mem_suffix[-2..-1]
+            when 'GB'
+                memory *= 1024
+            when 'TB'
+                memory *= 1024**2
+            end
+            memory
+        end
 
-#             template = <<EOT
-# NAME="#{name}"
-# CPU=#{vcpu}
-# VCPU=#{vcpu}
-# MEMORY=#{memory}
-# HYPERVISOR="lxd"
-# IMPORT_VM_ID="#{name}"
-# OS=[ARCH="#{arch}"]
-# EOT
+        def yaml_to_one(container)
+            name = container.name
+            arch = container.info['architecture']
+            capacity = container.config_expanded
+            cpu = capacity['limits.cpu.allowance'].chomp('%').to_f / 100
+            vcpu = capacity['limits.cpu']
+            memory = parse_memory(capacity['limits.memory'])
 
-#             template
-#         end
+            template = <<EOT
+NAME="#{name}"
+CPU=#{cpu}
+VCPU=#{vcpu}
+MEMORY=#{memory}
+HYPERVISOR="lxd"
+IMPORT_VM_ID="#{name}"
+OS=[ARCH="#{arch}"]
+EOT
+
+            template
+        end
 
     end
 

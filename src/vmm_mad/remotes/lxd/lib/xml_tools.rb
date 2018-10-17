@@ -11,15 +11,20 @@ module LXDriver
         HOTPLUG_PREFIX = 'VMM_DRIVER_ACTION_DATA/'
         USER_TEMPLATE = '//USER_TEMPLATE/'
 
-        attr_reader :vm_id, :datastores, :sysds_id, :rootfs_id, :xml
+        attr_reader :xml, :vm_id, :vm_name, :wild, :sysds_id, :datastores, :rootfs_id
 
         def initialize(xml_file, root = '')
             @xml = OpenNebula::XMLElement.new
             @xml.initialize_xml(xml_file, root + 'VM')
             @vm_id = single_element('VMID')
-            @datastores = datastores
+            @vm_name = 'one-' + @vm_id
             @sysds_id = xml_single_element('//HISTORY_RECORDS/HISTORY/DS_ID')
-            @rootfs_id = rootfs_id
+            @wild = false
+            @wild = true unless single_element('TEMPLATE_ID')
+            unless wild
+                @datastores = datastores
+                @rootfs_id = rootfs_id
+            end
         end
 
         # Returns the diskid corresponding to the root device
@@ -250,7 +255,7 @@ module LXDriver
     class YAML < Hash
 
         def initialize(xml)
-            self['name'] = 'one-' + xml.vm_id
+            self['name'] = xml.vm_name
             self['config'] = {}
             self['devices'] = {}
 

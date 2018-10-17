@@ -35,13 +35,15 @@ else
     container.stop
 end
 
-begin
-    LXDriver.container_storage(info, 'unmap')
-rescue StandardError => e
-    container.start
-    raise e
-end
+unless info.wild
+    begin
+        LXDriver.container_storage(info, 'unmap')
+    rescue StandardError => e
+        container.start
+        raise e
+    end
 
-container.delete
+    container.delete
+end
 
 LXDriver.log_end(t0)

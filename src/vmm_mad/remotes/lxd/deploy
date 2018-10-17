@@ -24,22 +24,24 @@ LXDriver.log_init
 xml_path = ARGV[0]
 vm_id = ARGV[2]
 
-# Map one xml into LXD yaml
 info = LXDriver::XML.new(STDIN.read)
-yaml = LXDriver::YAML.new(info)
-
-# Create container object
 client = LXDClient.new
-container = Container.new(yaml, client)
 
-# Create LXD container
-LXDriver.container_create(container, client)
-# Setup required mounts
-LXDriver.container_storage(info, 'map')
-LXDriver.container_start(container, info)
+container = ''
+if info.wild
+    vm_name = info.xml_single_element('//NAME')
+    container = Container.get(vm_name, client)
+    container.start
+else
+    yaml = LXDriver::YAML.new(info)
+    container = Container.new(yaml, client)
+
+    LXDriver.container_create(container, client)
+    LXDriver.container_storage(info, 'map')
+    LXDriver.container_start(container, info)
+end
 
 LXDriver.vnc(info)
-
 LXDriver.log_end(t0)
 
 puts container.name
