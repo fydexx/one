@@ -77,8 +77,27 @@ module LXDriver
             "#{info.datastores}#{info.sysds_id}/#{info.vm_id}/#{dir}disk.#{disk_id}"
         end
 
-        # TODO: VNC server
-        def vnc(info); end
+        # TODO: discuss vncterm vs svncterm
+        # TODO: vnc lost on reboot?
+        def vnc(info)
+            data = nil
+            begin
+                data = info.complex_element('GRAPHICS')
+            rescue StandardError => exception
+                return
+            end
+            return if data['TYPE'] != 'VNC'
+
+            # pass = "\'\'"
+            # pass = ''
+            # pass = data['PASSWD'] if data['PASSWD']
+            pass = data['PASSWD'] # TODO: mandatory on vncterm
+            command = "lxc exec #{info.vm_name} login"
+            vnc_client = "vncterm -timeout 0 -passwd #{pass} -rfbport #{data['PORT']} -c #{command}"
+
+            OpenNebula.log vnc_client
+            Process.detach(spawn(vnc_client))
+        end
 
         ###############
         #  Container  #
