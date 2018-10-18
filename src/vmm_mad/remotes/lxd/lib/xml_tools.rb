@@ -17,11 +17,12 @@ module LXDriver
             @xml = OpenNebula::XMLElement.new
             @xml.initialize_xml(xml_file, root + 'VM')
             @vm_id = single_element('VMID')
-            @vm_name = 'one-' + @vm_id
-            @sysds_id = xml_single_element('//HISTORY_RECORDS/HISTORY/DS_ID')
             @wild = false
-            @wild = true unless single_element('TEMPLATE_ID')
-            unless wild
+            @wild = true unless single_element('TEMPLATE_ID') # TODO: reliable ?
+            @vm_name = 'one-' + @vm_id
+            @vm_name = xml_single_element('//NAME') if wild
+            @sysds_id = xml_single_element('//HISTORY_RECORDS/HISTORY/DS_ID')
+            unless @wild
                 @datastores = datastores
                 @rootfs_id = rootfs_id
             end
