@@ -119,10 +119,10 @@ class Container
 
     # Updates container attr from @info
     def set_attr
-        # TODO: make this variables, somehow pointers to @info,
-        # TODO: to avoid calling this method
+        # TODO: make attribures references to @info values
         @status = @info['status']
         @status_code = @info['status_code']
+        @profile = @info['profile']
         @config = @info['config']
         @config_expanded = info['expanded_config']
         @devices = @info['devices']

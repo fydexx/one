@@ -27,9 +27,9 @@ module LXDriver
             return if @wild
 
             @vm_name = 'one-' + @vm_id
-                @datastores = datastores
-                @rootfs_id = rootfs_id
-            end
+            @datastores = datastores
+            @rootfs_id = rootfs_id
+        end
 
         # Returns the diskid corresponding to the root device
         def rootfs_id
@@ -102,6 +102,12 @@ module LXDriver
         ###############
         #   LXD_raw   #
         ###############
+
+        def profile(hash)
+            profile = single_element('LXD_PROFILE', USER_TEMPLATE)
+            profile ||= 'default'
+            hash['profile'] = profile
+        end
 
         # TODO: Get data from USER_TEMPLATE(current) or TEMPLATE/FEATURES
         def security
@@ -265,6 +271,7 @@ module LXDriver
 
             xml.memory(self['config'])
             xml.cpu(self['config'])
+            xml.profile(self)
             xml.extra(self['config'])
             xml.network(self['devices'])
             xml.storage(self['devices'])
