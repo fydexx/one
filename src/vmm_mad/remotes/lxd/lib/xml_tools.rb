@@ -17,16 +17,19 @@ module LXDriver
             @xml = OpenNebula::XMLElement.new
             @xml.initialize_xml(xml_file, root + 'VM')
             @vm_id = single_element('VMID')
-            @wild = false
-            @wild = true unless single_element('TEMPLATE_ID') # TODO: reliable ?
-            @vm_name = 'one-' + @vm_id
-            @vm_name = xml_single_element('//NAME') if wild
             @sysds_id = xml_single_element('//HISTORY_RECORDS/HISTORY/DS_ID')
-            unless @wild
+
+            deploy_id = xml_single_element('//DEPLOY_ID')
+            @vm_name = deploy_id
+
+            @wild = false
+            @wild = true if deploy_id
+            return if @wild
+
+            @vm_name = 'one-' + @vm_id
                 @datastores = datastores
                 @rootfs_id = rootfs_id
             end
-        end
 
         # Returns the diskid corresponding to the root device
         def rootfs_id

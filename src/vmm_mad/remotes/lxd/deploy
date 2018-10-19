@@ -27,10 +27,9 @@ vm_id = ARGV[2]
 info = LXDriver::XML.new(STDIN.read)
 client = LXDClient.new
 
-container = ''
+container = nil
 if info.wild
-    vm_name = info.xml_single_element('//NAME')
-    container = Container.get(vm_name, client)
+    container = Container.get(info.vm_name, client)
     container.start
 else
     yaml = LXDriver::YAML.new(info)
